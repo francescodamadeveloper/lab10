@@ -1,16 +1,25 @@
 package it.unibo.mvc;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.StringTokenizer;
 
 /**
  */
 public final class DrawNumberApp implements DrawNumberViewObserver {
+    private int minimum = MIN;
+    private int maximum = MAX;
+    private int attempts = ATTEMPTS;
     private static final int MIN = 0;
     private static final int MAX = 100;
     private static final int ATTEMPTS = 10;
-
+    private static final String ROOT = "config.yml";
     private final DrawNumber model;
     private final List<DrawNumberView> views;
 
@@ -27,7 +36,14 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
             view.setObserver(this);
             view.start();
         }
-        this.model = new DrawNumberImpl(MIN, MAX, ATTEMPTS);
+        try {
+            configRead();
+        } catch(IOException e) {
+            e.printStackTrace();
+        } finally {
+            this.model = new DrawNumberImpl(minimum, maximum, attempts);
+        }
+        
     }
 
     @Override
@@ -49,6 +65,27 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
         this.model.reset();
     }
 
+    private void configRead() throws IOException{
+        final InputStream in = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(ROOT));
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while((line = br.readLine()) != null) {
+                StringTokenizer splitted = new StringTokenizer(line, ": ");
+                switch(splitted.nextToken()) {
+                    case "minimum" : 
+                        this.minimum = Integer.valueOf(splitted.nextToken());
+                        break;
+                    case "maximum" :
+                        this.maximum = Integer.valueOf(splitted.nextToken());
+                        break;
+                    case "attempts" :
+                        this.attempts = Integer.valueOf(splitted.nextToken());
+                        break;
+                }
+            }
+        }
+    }
+
     @Override
     public void quit() {
         /*
@@ -66,7 +103,7 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
      * @throws FileNotFoundException 
      */
     public static void main(final String... args) throws FileNotFoundException {
-        new DrawNumberApp(new DrawNumberViewImpl());
+        new DrawNumberApp(new DrawNumberViewImpl(), new PrintStreamView("output.txt"), new PrintStreamView(System.out));
     }
 
 }

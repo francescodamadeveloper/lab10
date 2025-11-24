@@ -1,6 +1,5 @@
 package it.unibo.mvc;
 
-
 /**
  * Encapsulates the concept of configuration.
  */
@@ -9,7 +8,6 @@ public final class Configuration {
     private final int max; 
     private final int min;
     private final int attempts;
-
     private Configuration(final int max, final int min, final int attempts) {
         this.max = max;
         this.min = min;
