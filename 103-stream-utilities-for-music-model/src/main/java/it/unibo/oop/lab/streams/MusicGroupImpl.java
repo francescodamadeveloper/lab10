@@ -31,42 +31,64 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> orderedSongNames() {
-        return null;
+        return this.songs.stream()
+                .map(t -> t.songName)
+                .sorted(String:: compareTo);
     }
 
     @Override
     public Stream<String> albumNames() {
-        return null;
+        return this.albums.keySet().stream();
     }
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return null;
+        return this.albums.keySet().stream()
+                .filter(t -> albums.get(t).equals(year));
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return -1;
+        return (int) this.songs.stream()
+                .filter(t -> t.getAlbumName().isPresent() && albumName.equals(t.getAlbumName().get()))
+                .count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return -1;
+        return (int) this.songs.stream()
+                .map(Song::getAlbumName)
+                .filter(t -> !t.isPresent())
+                .count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return OptionalDouble.empty();
+        return this.songs.stream()
+                .filter(t -> t.getAlbumName().isPresent() && albumName.equals(t.getAlbumName().get()))
+                .mapToDouble(Song::getDuration)
+                .average();
     }
 
     @Override
     public Optional<String> longestSong() {
-        return Optional.empty();
+        return this.songs.stream()
+                .max((x, y) -> Double.compare(x.getDuration(), y.getDuration()))
+                .map(Song::getSongName);
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return Optional.empty();
+        return this.albums.keySet().stream()
+                .max((x, y) -> Double.compare(this.albumLenght(x), this.albumLenght(y)));
+    }
+
+    private Double albumLenght(final String albumName) {
+        return this.songs.stream()
+                .filter(t -> t.getAlbumName().isPresent())
+                .filter(t -> albumName.equals(t.getAlbumName().get()))
+                .map(Song::getDuration)
+                .reduce((x, y) -> x + y).get();
     }
 
     private static final class Song {
